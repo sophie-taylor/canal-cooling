@@ -1,0 +1,654 @@
+<!doctype html>
+  <html>
+	  <head>
+		<!-- this is to load a local file -->
+		{% load static %}
+	  
+		<style>
+			/* this is to display to read more text as none as default */
+			#more {display: none;}
+			
+			/* style for text */
+			p {
+				color: black;
+				font-family: sans-serif;
+			}
+			
+			h1 {
+				background-color: darkblue;
+				color: white;
+				font-family: sans-serif;
+				padding: 20px;
+			}
+			
+			h2 {
+				color: darkblue;
+				font-family: sans-serif;
+			}	
+						
+			* {
+				box-sizing: border-box;
+			}
+			
+			/* this is to put elements into columns i.e. weather parameters */
+			.column {
+				float: left;
+				width: 50%;
+				padding: 5px;
+			}
+			
+			.row::after {
+				content: "";
+				clear: both;
+				display: table;
+			}
+
+			/* this is to set the size of the map */
+			#map {
+				width: 800px;
+				height: 500px;
+			}
+			
+			/* cursor = pointer */
+			.pointer {cursor:pointer;}
+			
+			
+			.button {
+				background-color: #00ba91;
+				border: none;
+				color: black;
+				padding: 10px 37px;
+				text-align: center;
+				text-decoration: none;
+				display: inline-block;
+				font-size: 16px;
+				margin: 4px 2px;
+				cursor: pointer;
+				font-weight: bold;
+			}
+			
+			/* read more button style and style when hovered over */
+			.btn {
+				border: black;
+				color: white;
+				padding: 12px 24px;
+				font-size: 16px
+				cursor: pointer;
+			}
+						
+			.readbutton {background-color: #606060;}
+			.readbutton:hover {background: #bababa; color: black;}		
+		
+		</style>
+	  
+		<script>
+		
+			//load data from python into array
+			//define maximum cooling at every point along canal for use in map
+			var points =[
+				{% for row in mapTempChange %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//maximum cooling for day
+			var maxCool = {{maxCool}}
+			
+			//minimum cooling for day
+			var minCool = {{minCool}}
+			
+			//increment for use in colouring dots in map
+			var increment = (maxCool - minCool)/6;
+			
+			//define canal width at every point along canal
+			var canalWidths =[
+				{% for row in canalWidth %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//define canal direction at every point along canal
+			var canalDirection =[
+				{% for row in canalDirection %}
+					 {{row}},
+				{% endfor %}
+			];			
+			
+			//define time of maximum cooling at every point along canal
+			var time =[
+				{% for row in position %}
+					 {{row}},
+				{% endfor %}
+			];	
+			
+			//define percent of canal width which is shaded at every point along canal
+			var shade =[
+				{% for row in shade %}
+					 {{row}},
+				{% endfor %}
+			];	
+				
+			/**
+             * Create a Google Map and add markers for each location
+             * returns google.maps.Map 
+             */
+            function initMap() {
+
+                //initialise the map - set location and map style
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: {lat: 53.4668406, lng: -2.2359519},
+                    zoom: 13,
+					styles: [{
+						featureType: 'poi',
+						stylers: [{ visibility: 'off' }] 
+						},
+						{
+						featureType: 'transit.station',
+						stylers: [{ visibility: 'off' }] 
+					}],
+                });
+
+                //empty variable to hold colour string
+                var dotColour = '';
+
+                //create the markers
+                var markers = [];
+				
+				// set marker colours
+				var colours = ['#7fcdbb','#41b6c4','#1d91c0','#225ea8','#253494','#081d58']
+				
+				//for every point along canal
+                for (var i = 0; i < points.length; i++) {
+				
+                    //work out which colour it should be
+                    if (points[i][2] >= maxCool-increment){
+						
+						dotColour = colours[5];
+					
+					} else if (points[i][2] >= maxCool-(increment*2) && points[i][2] < maxCool-increment){
+					
+						dotColour = colours[4];
+                    										
+					} else if (points[i][2] >= maxCool-(increment*3) && points[i][2] < maxCool-(increment*2)){
+					
+						dotColour = colours[3];
+						
+					} else if (points[i][2] >= maxCool-(increment*4) && points[i][2] < maxCool-(increment*3)){
+					
+						dotColour = colours[2];
+                    
+					} else if (points[i][2] >= maxCool-(increment*5) && points[i][2] < maxCool-(increment*4)){
+					
+						dotColour = colours[1];
+					
+					} else if ( points[i][2] < maxCool-(increment*5)){
+					
+						dotColour = colours[0];
+					}
+					
+					//if there are more than 15 points along the canal, create a smaller dot size
+					var dotSize = points.length > 15 ? 7 : 12;
+					
+                    //create the marker
+                    markers.push(new google.maps.Marker({
+						//set each location
+                        position: {lat: points[i][1],
+                            lng: points[i][0]},
+                        map: map,
+						//style the icon
+                        icon: {
+							path: google.maps.SymbolPath.CIRCLE,
+							scale: dotSize,
+							fillOpacity: 1.0,
+							fillColor: dotColour,
+							strokeColor: '#ffffff',
+							strokeWeight: 2
+						},
+                        clickable: true
+
+                    }));
+					
+					//set content in information window when dot is clicked
+					var content = '<div id="content">'+
+								'<div id="siteNotice">'+
+								'</div>'+
+								'<h3 id="firstHeading" class="firstHeading">Additional Information</h3>'+
+								'<div id="bodyContent">'+
+								'<p>Maximum Temperature Drop = '+ points[i][2].toFixed(2) + '&deg;C</p>' +
+								'<p>Canal Width = '+ canalWidths[i].toFixed(2) + 'm</p>' +
+								'<p>Canal Direction (from North)= '+ canalDirection[i] + '&deg;</p>'+
+								'<p>Time of Maximum Cooling = '+ time[i] + ':00</p>'+
+								'<p>Shaded Canal Width = '+ ((shade[i]/canalWidths[i])*100).toFixed(1) + '&#37;</p>'+
+								'</div>'+
+								'</div>';
+					addInfoWindowListener(markers[markers.length-1], content);
+					
+					
+				}
+				
+				//set the map bounds to fit the markers
+                var bounds = new google.maps.LatLngBounds();
+                for (var i = 0; i < markers.length; i++) {
+                    bounds.extend(markers[i].getPosition());
+                }
+                map.fitBounds(bounds);
+               
+            }
+			
+			/**
+			 * Use closure to load info window
+			 */
+			function addInfoWindowListener(marker, message){
+				
+				var infoWindow = new google.maps.InfoWindow({
+					content: message
+				});
+			
+				marker.addListener('click', function() {
+					infoWindow.open(map, marker);
+					}
+				);
+			}
+			
+		</script>
+	  
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			//define cooling for every hour throughout the day
+			var temps =[
+				{% for row in graphTempChange %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Temperature Change'] ];
+			for (var i = 0; i < temps.length; i++){
+				data.push([i, temps[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Average Urban Cooling along the Rochdale Canal',
+			  curveType: 'function',
+			  legend: 'none',
+			  lineWidth: 3,
+			  colors: ['#00ba91'],
+			  vAxis: {title: 'Temperature Change of Surrounding Air (Celcius)'},
+			  hAxis: {title: 'Hour'}			  
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('temp_change'));
+			chart.draw(data, options);
+		  }
+
+		  
+		</script>
+
+
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			var temp =[
+				{% for row in airTemp %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Temp'] ];
+			for (var i = 0; i < temp.length; i++){
+				data.push([i, temp[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Air Temperature',
+			  vAxis: {title: 'Temperature (Celcius)'},
+			  hAxis: {title: 'Hour'},
+			  curveType: 'function',
+			  legend: 'none'
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('air_temp'));
+			chart.draw(data, options);
+		  }
+
+		  
+		</script>
+
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			var wind =[
+				{% for row in wind %}
+					 {{row}},
+				{% endfor %}
+			];
+
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Wind'] ];
+			for (var i = 0; i < wind.length; i++){
+				data.push([i, wind[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Wind Speed',
+			  vAxis: {
+				title: 'Wind Speed (m/s)',
+				viewWindow:{min:0}
+				},
+			  hAxis: {title: 'Hour'},
+			  curveType: 'function',
+			  legend: 'none'
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('wind'));
+			chart.draw(data, options);
+		  }
+
+		  
+		</script>
+
+
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			var humidity =[
+				{% for row in humidity %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Humidity'] ];
+			for (var i = 0; i < humidity.length; i++){
+				data.push([i, humidity[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Humidity',
+			  vAxis: {
+				title: 'Humidity (%)',
+				viewWindow:{
+					min:0,
+					max:100
+					}
+				},
+			  hAxis: {title: 'Hour'},
+			  curveType: 'function',
+			  legend: 'none'
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('humidity'));
+			chart.draw(data, options);
+		  }
+
+		  
+		</script>
+
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			var airP =[
+				{% for row in airP %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Air Pressure'] ];
+			for (var i = 0; i < airP.length; i++){
+				data.push([i, airP[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Air Pressure',
+			  vAxis: {title: 'Air Pressue (mbar)'},
+			  hAxis: {title: 'Hour'},
+			  curveType: 'function',
+			  legend: 'none'
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('airP'));
+			chart.draw(data, options);
+		  }
+		  
+		</script>
+	
+		
+		<script type="text/javascript">
+		
+		  //load the charts api and call drawChart when loaded
+		  google.charts.load('current', {'packages':['corechart']});
+		  google.charts.setOnLoadCallback(drawChart);
+
+		/**
+		 * Draw the chart using data from Python
+		 */
+		  function drawChart() {
+		  
+			//load data from the python into an array
+			var cloudC =[
+				{% for row in cloudC %}
+					 {{row}},
+				{% endfor %}
+			];
+			
+			//put into the format required for the chart
+			data = [ ['Hour', 'Cloud Cover'] ];
+			for (var i = 0; i < cloudC.length; i++){
+				data.push([i, cloudC[i]]);
+			}
+			
+			//convert data into table format
+			var data = google.visualization.arrayToDataTable(data);
+
+			//set options
+			var options = {
+			  title: 'Cloud Cover',
+			  vAxis: {
+				title: 'Cloud Cover (%)',
+				viewWindow:{
+					min:0,
+					max:100
+					}
+				},
+			  hAxis: {title: 'Hour'},
+			  curveType: 'function',
+			  legend: 'none'
+			};
+
+			//draw the chart
+			var chart = new google.visualization.LineChart(document.getElementById('cloudC'));
+			chart.draw(data, options);
+		  }
+		  
+		</script>
+
+		<title>Canal Cooling: Results</title>
+		
+
+	</head>
+	
+	<body>
+
+		<!--title of results page-->
+		<h1>Rochdale Canal Cooling Calculator: Results</h1>
+		
+		
+		<form>
+		
+			<!--back button-->
+			<input type="button" value="Go back!" class = "button" onclick="history.back()">
+		</form>
+		
+		<!-- read more text-->
+		<p><span id="dots"></span><span id="more">
+				
+				<strong>Input Parameters</strong><br>
+				
+				A date needs to be chosen from which the suns position will be calculated and the appropriate hourly weather data will be gathered.
+				The interval of points along the canal, where cooling is calculated, can be altered depending on how much detail is needed in the 
+				output. A smaller interval between points will result in the model taking longer to run. Weather inputs can also be altered by 
+				increasing/decreasing various parameters by a specified quantity.<br><br>
+
+				<strong>Data Sources</strong><br>
+				
+				Contains OS data &copy; Crown copyright and batabase right (2018) Ordnance Survey<br>
+				2018 OpenWeather &copy; All rights reserved<br><br>
+
+				<strong>Outputs</strong><br>
+				
+				The model results in 3 oututs. The maximum drop in surrounding air temperature on the chosen date, compared to a concrete equivalent. 
+				A line graph showing the average change in air temperature surrounding the canal over the course of the day.
+				A map showing maximum cooling at various points along the canal. Canal width, canal direction and surrounding buildings 
+				are all factors which the model takes into consideration when calculating this spatial aspect.<br><br>
+				
+				<strong>Calculations</strong><br>
+				
+				Absorbed and reflected solar radiation due to sunlight are calculated and subsequent change in water temperature. Then evaporation, thermal 
+				radiation and sensible heat transfer are calculated to determine heat transfer to the outside environment and therefore energy removed from 
+				the system can be estimated. This is then compared to energy gain from a concrete equivalent and from this net change in air temperature 
+				from the canal is estimated.<br><br>
+				
+		</span></p>
+		
+			<!--read more button-->
+		<button onclick="myFunction()" id="myBtn" class="btn readbutton">About the Model</button>
+
+		<script>
+			function myFunction() {
+			  var dots = document.getElementById("dots");
+			  var moreText = document.getElementById("more");
+			  var btnText = document.getElementById("myBtn");
+
+			  if (dots.style.display === "none") {
+				dots.style.display = "inline";
+				btnText.innerHTML = "About the Model"; 
+				moreText.style.display = "none";
+			  } else {
+				dots.style.display = "none";
+				btnText.innerHTML = "Read less"; 
+				moreText.style.display = "inline";
+			  }
+			}
+		</script>
+		<br>
+			
+		<!-- Top access data from the context object in your view, simply put the name of it in double curly braces  -->
+		<!--output 1 - singular number for maximum cooling-->
+		<p>In Manchester city centre there was a maximum of <strong>{{maxCool}} &deg;C</strong> of urban cooling from the Rochdale Canal on {{date}}</p>
+			
+			<!--output 2 - line graph to show average cooling thorughout the chosen day-->
+			<div id="temp_change" style="width: 1100px; height: 600px"></div>
+			
+			<br><br>
+			<!--title for map-->
+			<p><b>Maximum Urban Cooling along the Rochdale Canal on {{date}}</b></p>
+				
+				<!--output 3 - map to show maximum cooling at every point along the canal-->
+				<div id="map" style="float:left"></div>
+
+			<div style="float">
+				
+				<!--legend - static file was created in paint and loaded into html --> 
+				<img src="{% static 'cooling/images/legend.jpg' %}" width="100px" height="240px"/>
+			</div>
+			
+			<br><br><br><br><br><br><br>			
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			
+			<h2><u>Weather Inputs</u></h2>
+			
+			<div class="row">
+				<div class="column">
+				
+					<!--multiple line graphs to show all weather parameters over the course of the selected date-->
+					<div id="air_temp" style="width: 550px; height: 300px" ></div>
+					<div id="wind" style="width: 550px; height: 300px" ></div>
+					<div id="humidity" style="width: 550px; height: 300px" ></div>	
+				</div>
+				<div class="column">
+					<div id="airP" style="width: 550px; height: 300px" ></div>	
+					<div id="cloudC" style="width: 550px; height: 300px" ></div>	
+				</div>
+			</div>
+		
+		<!-- google API link-->
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB6aM7ofPqNcw4C_N3wbXQkPNEcO3lhsp4&callback=initMap" type="text/javascript"></script>
+		
+	</body>
+</html>

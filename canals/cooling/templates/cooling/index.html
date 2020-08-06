@@ -1,0 +1,405 @@
+<!doctype html>
+<html>
+
+	<head>
+				
+		<title>Canal Cooling Calculator</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<style>
+			/* read more text default is to display none */
+			#more {display: none;}
+			
+			/*style for text*/
+			h1 {
+				background-color: darkblue;
+				color: white;
+				font-family: sans-serif;
+				padding: 20px;
+			}
+			
+			h2 {
+				color: darkblue;
+				font-family: sans-serif;
+			}	
+			
+			h3 {
+				colour:red
+				font-family: sans-serif;
+			}			
+			
+			p {
+				color: black;
+				font-family: sans-serif;
+				
+			}
+			
+			/*style for hyperlink - default - when visited - when hovered over*/
+			a:link {
+				color: darkblue;
+				background-color: transparent;
+				text-decoration: none;
+			}
+			a:visited {
+				color: darkblue;
+				background-color: transparent;
+				text-decoration: none;
+			}
+			a:hover {
+				color: red;
+				background-color: transparent;
+				text-decoration: underline;
+			}
+			
+			/*style for go button and style for when hovered over*/
+			.button {
+				background-color: #003bbc;
+				border: none;
+				color: white;
+				padding: 25px 50px;
+				text-align: center;
+				text-decoration: none;
+				display: inline-block;
+				font-size: 18px;
+				margin: 6px 3px;
+				-webkit-transition-duration: 0.4s; 
+				transition-duration: 0.4s;
+				cursor: pointer;
+				font-weight: bold;
+			}
+
+			.button1 {background-color: #709dff; color: black;}
+			.button1:hover {background-color: #003bbc;color: white;}
+
+			/*style for read more button and style for when hovered over*/
+			.btn {
+				border: black;
+				color: white;
+				padding: 12px 24px;
+				font-size: 14px;
+				cursor: pointer;				
+			}
+						
+			.readbutton {background-color: #606060;}
+			.readbutton:hover {background: #bababa; color: black;}
+						
+			* {
+				box-sizing: border-box;
+			}
+
+			
+			/* to put elements in columns i.e. additional parameters */
+			.column {
+				float: left;
+				width: 33.33%;
+				padding: 5px;
+			}
+
+			.row::after {
+				content: "";
+				clear: both;
+				display: table;
+			}
+			
+			/* cursor = pointer */
+			.pointer {cursor:pointer;}
+			
+			/* for gif to appear on click of go button */
+			.show{display:inline;}
+			.hide{display:none;}
+			
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<!--title and introduction-->
+		<h1>Rochdale Canal Cooling Calculator</h1>
+		
+		<p>In order to quantify and visualise the effect of urban cooling from the Rochdale Canal in Manchester City Centre, a model has been 
+		developed to calculate its impact on surrounding air temperatures. Urban cooling is calculated on a chosen date at various points along 
+		a 2km stretch of the canal: from Deansgate Locks to the inner ring road.<br><br>
+		
+		<b>PLEASE NOTE: the model will take several minutes to run.</b>
+		
+		<!--read more information-->
+		<span id="dots"></span><span id="more">
+			
+			<br><br><br>
+			
+			<u><strong>About the Model</strong></u><br><br>
+			
+			<strong>Input Parameters</strong><br>
+			
+			A date needs to be chosen from which the suns position will be calculated and the appropriate hourly weather data will be gathered.
+			The interval of points along the canal, where cooling is calculated, can be altered depending on how much detail is needed in the 
+			output. A smaller interval between points will result in the model taking longer to run. Weather inputs can also be altered by 
+			increasing/decreasing various parameters by a specified quantity.<br><br>
+			
+			<strong>Data Sources</strong><br>
+			
+			Contains OS data &copy; Crown copyright and batabase right (2018) Ordnance Survey<br>
+			2018 OpenWeather &copy; All rights reserved<br><br>
+
+			<strong>Outputs</strong><br>
+			
+			The model results in 3 oututs. The maximum drop in surrounding air temperature on the chosen date, compared to a concrete equivalent. 
+			A line graph showing the average change in air temperature surrounding the canal over the course of the day.
+			A map showing maximum cooling at various points along the canal. Canal width, canal direction and surrounding buildings 
+			are all factors which the model takes into consideration when calculating this spatial aspect.<br><br>
+			
+			<strong>Calculations</strong><br>
+			
+			Absorbed and reflected solar radiation due to sunlight are calculated and subsequent change in water temperature. Then evaporation, thermal 
+			radiation and sensible heat transfer are calculated to determine heat transfer to the outside environment and therefore energy removed from 
+			the system can be estimated. This is then compared to energy gain from a concrete equivalent and from this net change in air temperature 
+			from the canal is estimated.<br><br>
+			
+			<u><strong>Background Information</strong></u><br><br>
+			
+			<strong>Urban Heat Island Effect</strong><br>
+			
+			The <strong><a href="https://en.wikipedia.org/wiki/Urban_heat_island" target="_blank">urban heat island effect</a></strong> is the development of noticeably 
+			higher temperatures in cities, in comparison to rural areas surrounding them. It is a result of multiple factors including increased dark surfaces, 
+			reduction of vegetation and increased anthropogenic heat production. Urban heat islands are becoming ever more prominent with the rapid increase of 
+			urbanization, exasperated by the effects of climate change, and are therefore becoming an increasingly rising issue.<br><br>
+			
+			<strong>Urban Cooling</strong><br>
+			
+			Through the careful design and management of urban areas, attempts have been made mitigate these effects and cool cities. Water bodies are considered 
+			an effective factor in minimising the urban heat island effect, primarily through an evaporative flux. A waterbodies ability 
+			to modify surrounding temperatures is determined both by its inherent properties and by its interactions with surrounding climate conditions. 
+
+		</span></p>
+		
+		<!--read more button-->
+		<button onclick="myFunction()" id="myBtn" class="btn readbutton">Read more</button>
+
+		<script>
+			function myFunction() {
+			  var dots = document.getElementById("dots");
+			  var moreText = document.getElementById("more");
+			  var btnText = document.getElementById("myBtn");
+
+			  if (dots.style.display === "none") {
+				dots.style.display = "inline";
+				btnText.innerHTML = "Read more"; 
+				moreText.style.display = "none";
+			  } else {
+				dots.style.display = "none";
+				btnText.innerHTML = "Read less"; 
+				moreText.style.display = "inline";
+			  }
+			}
+		</script>
+		<br><br>
+		
+		<!--image of canal and hyperlink to full picture-->
+		<div class="row">
+			<div class="column">		
+				<a href="https://canalrivertrust.org.uk/refresh/media/original/21339.jpg?v=6ceb45" target="_blank"><img src="https://canalrivertrust.org.uk/refresh/media/original/21339.jpg?v=6ceb45" alt="Rochdale Canal" width="100%" height="10%"></a>
+				<font face="sans-serif">Rochdale Canal (Source: Canal and River Trust)</font face>
+			</div>
+			<div class="column">
+			
+				<!--hidden gif - appears when go button is clicked-->
+				<img id="loading" src="https://media.giphy.com/media/sSgvbe1m3n93G/giphy.gif" width="30%" height="30%" class="hide">
+			</div>
+		</div>
+		
+		<!--create a form for user to input values - sent to python script via POST method-->
+		<form action="{% url 'cooling:results' %}" method='post'>
+			
+			{% csrf_token %}
+										
+			<div class="row">
+				<div class="column">
+				
+					<!--input style = date. max and min values of gathered weather data. defult value = most recent date-->
+					<h2><Font size="5">Date:</Font size></h2>
+					<input type="date" name="date" min="2018-01-01" max="2018-07-21" value="2018-07-21">
+				</div>
+				<div class="column">
+				
+					<!--go button to submit form. When clicked gif shows-->
+					<br><br><input type="submit" class="button button1" value="Go!" onclick="showImg()">
+					
+				</div>
+				
+				<!--javascript to show gif-->
+				<script>
+					function showImg(){
+						var obj=document.getElementById('loading');
+						obj.className = 'show';
+					}
+				</script>
+				<div class="column">
+				
+					<!--advanced options. when clicked shows more-->
+					<br><br><br><a onclick="more(this);" class="pointer"><p><Font color="blue"><b><u>Advanced Options &#709;</u></b></Font color></p></a>
+				</div>
+			</div>
+			
+			<!--default style is to display none-->
+			<label id="showMore" style="display: none;">
+				
+				<!--weather inputs-->
+				<h2><Font size="5">Weather Inputs:</Font size></h2>
+				
+				<div class="row">
+					<div class="column">
+					
+						<!--change air temperature by +/- 15 degrees using slider-->
+						<p>Increase Air Temperature by:</p>
+						<div class="slidecontainer">
+							<input type="range" min="-15" max="15" name="airTemp" value="0" class="slider" id="myRange">
+							<span id="demo"></span>&deg;C
+						</div>
+						
+						<!--when slider is dragged by user the value next to it updates-->
+						<script>
+							var slider = document.getElementById("myRange");
+							var output = document.getElementById("demo");
+							output.innerHTML = slider.value;
+
+							slider.oninput = function() {
+							  output.innerHTML = this.value;
+							}
+						</script>
+						
+						<br>
+
+						<!--change in wind speed by +/- 15 m/s using slider-->
+						<p>Increase Wind Speed by:</p>
+						<div class="slidecontainer">
+						<input type="range" min="-15" max="15" name="wind" value="0" class="slider" id="myRange1">
+						<span id="demo1"></span>m/s
+						</div>
+
+						<!--when slider is dragged by user the value next to it updates-->
+						<script>
+							var slider1 = document.getElementById("myRange1");
+							var output1 = document.getElementById("demo1");
+							output1.innerHTML = slider.value;
+
+							slider1.oninput = function() {
+							  output1.innerHTML = this.value;
+							}
+						</script>									
+						<br>
+						
+					</div>
+					<div class="column">
+					
+						<!--change in humidity by +/- 100 using slider-->
+						<p>Increase Relative Humidity by:</p>
+						<div class="slidecontainer">
+						<input type="range" min="-100" max="100" name="humidity" value="0" class="slider" id="myRange2">
+						<span id="demo2"></span>&#37;
+						</div>
+						
+						<!--when slider is dragged by user the value next to it updates-->
+						<script>
+							var slider2 = document.getElementById("myRange2");
+							var output2 = document.getElementById("demo2");
+							output2.innerHTML = slider.value;
+
+							slider2.oninput = function() {
+							  output2.innerHTML = this.value;
+							}
+						</script>			
+						<br>
+						
+						<!--increase air pressure by +/- 25 mbar using slider-->
+						<p>Increase Air Pressure by:</p>
+						<div class="slidecontainer">
+						<input type="range" min="-25" max="25" name="airP" value="0" class="slider" id="myRange3">
+						<span id="demo3"></span> mbar
+						</div>
+
+						<!--when slider is dragged by user the value next to it updates-->
+						<script>
+							var slider3 = document.getElementById("myRange3");
+							var output3 = document.getElementById("demo3");
+							output3.innerHTML = slider.value;
+
+							slider3.oninput = function() {
+							  output3.innerHTML = this.value;
+							}
+						</script>
+					
+					</div>
+					<div class="column">
+					
+						<!--increase cloud cover by +/- 100% using slider -->
+						<p>Increase Cloud Cover by:</p>
+						<div class="slidecontainer">
+						<input type="range" min="-100" max="100" name="cloudC" value="0" class="slider" id="myRange4">
+						<span id="demo4"></span>&#37;
+						</div>
+
+						<!--when slider is dragged by user the value next to it updates-->
+						<script>
+							var slider4 = document.getElementById("myRange4");
+							var output4 = document.getElementById("demo4");
+							output4.innerHTML = slider.value;
+
+							slider4.oninput = function() {
+							  output4.innerHTML = this.value;
+							}
+						</script>
+						
+						<br>
+					</div>
+					<div class="column">
+					
+						<!-- change the height of clouds which relates to a certain value to input into the python script-->
+						<p>Cloud Height:
+						<select name="cloudH">
+							<option value="0.34">Under 2km</option>
+							<option value="0.18" selected>Between 2km and 5km</option>
+							<option value="0.06">Over 5km</option>
+						</select></p>	
+					
+						<!--javascript to show more/less when advanced options link is clicked-->
+						<script>							
+							function more(obj) {
+								var content = document.getElementById("showMore");
+
+								if (content.style.display == "none") {
+									content.style.display = "";
+									obj.innerHTML = "<p><Font color = red><b><u>Show Less &#708;</u></b></Font color></p>";
+								} else {
+									content.style.display = "none";
+									obj.innerHTML = "<p><Font color = red><b><u>Advanced Options &#709;</u></b></Font color></p>";
+								}
+							}
+						</script>
+
+					</div>
+				</div>
+				
+				<!-- change interval along the canal using slider-->
+				<h2><Font size="5">Interval along canal:</Font size></h2>
+				<div class="slidecontainer">
+					<input type="range" min="10" max="200" name="interval" value="100" class="slider" id="Range">
+					<span id="Demo"></span> metres
+				</div>
+				
+				<!--when slider is dragged by user the value next to it updates-->
+				<script>
+					var slider6 = document.getElementById("Range");
+					var output6 = document.getElementById("Demo");
+					output6.innerHTML = slider6.value;
+
+					slider6.oninput = function() {
+					  output6.innerHTML = this.value;
+					}
+				</script>	
+			</label>					
+		</form>
+		<br>
+					
+	</body>
+</html>
